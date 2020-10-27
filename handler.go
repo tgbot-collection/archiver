@@ -16,7 +16,7 @@ import (
 func startHandler(m *tb.Message) {
 
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, "Hi! I'm the Internet Archive Wayback Machine bot.\n"+
+	_, _ = b.Send(m.Chat, "Hi! I'm the Internet Archive Wayback Machine bot. https://archive.org/web/\n"+
 		"You can send me any url and I'll save it for you.")
 
 }
@@ -32,8 +32,9 @@ func urlHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
 	_, err := url.ParseRequestURI(m.Text)
 	if err != nil {
-		log.Errorf("Bad url!%v", err)
-		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url %s seems to be invalid", m.Text))
+		log.Errorf("Bad url! %v", err)
+		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url <pre>%s</pre> seems to be invalid", m.Text),
+			&tb.SendOptions{ParseMode: tb.ModeHTML})
 	} else {
 		result, err := taksSnapshot(m.Text)
 		if err != nil {
@@ -50,8 +51,12 @@ func taksSnapshot(userUrl string) (string, error) {
 	var body = url.Values{}
 	body.Set("url", userUrl)
 	body.Set("capture_all", "on")
+
+	log.Infof("Requesting to %s with %v", saveUrl, body)
 	resp, err := http.PostForm(saveUrl, body)
 	if err != nil {
+		log.Errorf("failed %v %v", err)
+
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -59,6 +64,7 @@ func taksSnapshot(userUrl string) (string, error) {
 	if resp.StatusCode == http.StatusOK {
 		return "success", nil
 	} else {
+		log.Errorf("Not http 200 %v", resp.StatusCode)
 		return fmt.Sprintf("fail %d", resp.StatusCode), errors.New(resp.Status)
 	}
 

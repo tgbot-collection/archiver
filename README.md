@@ -6,6 +6,11 @@
 # WayBack Machine bot
 Send any link to this bot, and it will save it to [Internet Archive](https://archive.org/).
 
+# commands
+```
+start - start Wayback Machine bot
+about - about this bot
+```
 
 # Features
 * create snapshot
