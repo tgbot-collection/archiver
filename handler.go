@@ -5,11 +5,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	tb "gopkg.in/tucnak/telebot.v2"
-	"net/http"
 	"net/url"
 )
 
@@ -35,37 +33,9 @@ func urlHandler(m *tb.Message) {
 		log.Errorf("Bad url! %v", err)
 		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url <pre>%s</pre> seems to be invalid", m.Text),
 			&tb.SendOptions{ParseMode: tb.ModeHTML})
-	} else {
-		result, err := taksSnapshot(m.Text)
-		if err != nil {
-			_, _ = b.Send(m.Chat, fmt.Sprintf("Failed! %v", err))
-		} else {
-			_, _ = b.Send(m.Chat, fmt.Sprintf("Success! %s", result))
-		}
-
+		return
 	}
-
-}
-
-func taksSnapshot(userUrl string) (string, error) {
-	var body = url.Values{}
-	body.Set("url", userUrl)
-	body.Set("capture_all", "on")
-
-	log.Infof("Requesting to %s with %v", saveUrl, body)
-	resp, err := http.PostForm(saveUrl, body)
-	if err != nil {
-		log.Errorf("failed %v %v", err)
-
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		return "success", nil
-	} else {
-		log.Errorf("Not http 200 %v", resp.StatusCode)
-		return fmt.Sprintf("fail %d", resp.StatusCode), errors.New(resp.Status)
-	}
+	replied, _ := b.Reply(m, "I've received your request. Please wait a second.")
+	go takeSnapshot(m, replied)
 
 }
