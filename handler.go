@@ -14,8 +14,8 @@ import (
 func startHandler(m *tb.Message) {
 
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, "Hi! I'm the Internet Archive Wayback Machine bot. https://archive.org/web/\n"+
-		"You can send me any url and I'll save it for you.")
+	_, _ = b.Send(m.Chat, "Hi! I'm the [Internet Archive Wayback Machine bot].(https://archive.org/web/)\n"+
+		"You can send me any url and I'll archive it for you.", &tb.SendOptions{ParseMode: tb.ModeMarkdown})
 
 }
 
@@ -30,7 +30,7 @@ func urlHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
 	_, err := url.ParseRequestURI(m.Text)
 	if err != nil {
-		log.Errorf("Bad url! %v", err)
+		log.Warnln("Invalid url.")
 		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url <pre>%s</pre> seems to be invalid", m.Text),
 			&tb.SendOptions{ParseMode: tb.ModeHTML})
 		return

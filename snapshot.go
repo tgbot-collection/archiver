@@ -19,7 +19,7 @@ func takeSnapshot(m, replied *tb.Message) {
 	body.Set("url", userUrl)
 	body.Set("capture_all", "on")
 
-	log.Infof("Requesting to %s with %v", saveUrl, userUrl)
+	log.Infoln("Requesting to archive.org...")
 	resp, err := http.PostForm(saveUrl, body)
 	_, _ = b.Edit(replied, "Your archived request has been submitted.")
 
@@ -56,7 +56,7 @@ func takeSnapshot(m, replied *tb.Message) {
 
 func retrieveStatus(uuid string) (message string) {
 	reqUrl := fmt.Sprintf("%s%s?_t=%d", statusUrl, uuid, time.Now().Unix())
-	log.Infof("Getting new status from %s", reqUrl)
+	log.Infoln("Getting new status...")
 	resp, err := http.Get(reqUrl)
 	if err != nil {
 		return

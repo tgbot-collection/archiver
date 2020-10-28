@@ -6,7 +6,7 @@ package main
 
 import "os"
 
-var token = os.Getenv("token")
+var token = os.Getenv("TOKEN")
 
 // post, param: url
 var saveUrl = "https://web.archive.org/save/"

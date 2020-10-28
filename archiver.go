@@ -44,6 +44,8 @@ func main() {
 ▙▚▌▞▀▌▚▄▌▌ ▌▞▀▌▌ ▖▛▚  ▌ ▌▞▀▌▌ ▖▌ ▌▐ ▌ ▌▛▀
 ▘ ▘▝▀▘▗▄▘▀▀ ▝▀▘▝▀ ▘ ▘ ▘ ▘▝▀▘▝▀ ▘ ▘▀▘▘ ▘▝▀▘
 By %s 
+
+Across the Great Wall, we can reach every corner in the world.
 `, "BennyThink")
 
 	fmt.Printf("\n %c[1;32m%s%c[0m\n\n", 0x1B, banner, 0x1B)
