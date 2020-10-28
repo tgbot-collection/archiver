@@ -14,7 +14,7 @@ import (
 func startHandler(m *tb.Message) {
 
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, "Hi! I'm the [Internet Archive Wayback Machine bot].(https://archive.org/web/)\n"+
+	_, _ = b.Send(m.Chat, "Hi! I'm the [Internet Archive Wayback Machine bot](https://archive.org/web/).\n"+
 		"You can send me any url and I'll archive it for you.", &tb.SendOptions{ParseMode: tb.ModeMarkdown})
 
 }
