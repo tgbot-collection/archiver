@@ -20,6 +20,7 @@ func takeSnapshot(m, replied *tb.Message) {
 	body.Set("capture_all", "on")
 
 	log.Infoln("Requesting to archive.org...")
+	_ = b.Notify(m.Chat, tb.UploadingDocument)
 	resp, err := http.PostForm(saveUrl, body)
 	_, _ = b.Edit(replied, "Your archived request has been submitted.")
 
@@ -42,7 +43,8 @@ func takeSnapshot(m, replied *tb.Message) {
 
 	var snapResult = ""
 	for i := 0; i <= 10; i++ {
-		time.Sleep(time.Second * 10)
+		_ = b.Notify(m.Chat, tb.FindingLocation)
+		time.Sleep(time.Second * 5)
 		st := retrieveStatus(uuid)
 		if st != "" {
 			snapResult = st
@@ -50,6 +52,7 @@ func takeSnapshot(m, replied *tb.Message) {
 		}
 	}
 	_ = resp.Body.Close()
+	_ = b.Notify(m.Chat, tb.Typing)
 	_, _ = b.Edit(replied, snapResult, &tb.SendOptions{ParseMode: tb.ModeHTML, DisableWebPagePreview: true})
 
 }
