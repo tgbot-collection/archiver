@@ -43,8 +43,8 @@ func takeSnapshot(m, replied *tb.Message) {
 
 	var snapResult = ""
 	for i := 0; i <= 10; i++ {
-		_ = b.Notify(m.Chat, tb.FindingLocation)
-		time.Sleep(time.Second * 5)
+		_ = b.Notify(m.Chat, tb.RecordingAudio)
+		time.Sleep(time.Second * 7)
 		st := retrieveStatus(uuid)
 		if st != "" {
 			snapResult = st
