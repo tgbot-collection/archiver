@@ -69,7 +69,7 @@ func retrieveStatus(uuid string) (message string) {
 	_ = json.NewDecoder(resp.Body).Decode(&current)
 
 	if current.Status == "success" {
-		message = fmt.Sprintf(`%s, duration:%f
+		message = fmt.Sprintf(`%s, duration: %.2fs
 Click <a href="%s">here</a> to visit your snapshot.`, current.Status, current.Duration,
 			"https://web.archive.org/web/"+current.Timestamp+"/"+current.OriginalUrl)
 	} else {
