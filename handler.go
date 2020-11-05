@@ -26,6 +26,11 @@ func aboutHandler(m *tb.Message) {
 
 }
 
+func pingHandler(m *tb.Message) {
+	_ = b.Notify(m.Chat, tb.Typing)
+	_, _ = b.Send(m.Chat, getRuntime(), &tb.SendOptions{ParseMode: tb.ModeHTML})
+}
+
 func urlHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
 	_, err := url.ParseRequestURI(m.Text)

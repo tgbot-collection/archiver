@@ -52,6 +52,7 @@ Across the Great Wall, we can reach every corner in the world.
 
 	b.Handle("/start", startHandler)
 	b.Handle("/about", aboutHandler)
+	b.Handle("/ping", pingHandler)
 	b.Handle(tb.OnText, urlHandler)
 
 	log.Infoln("I'm running...")

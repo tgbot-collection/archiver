@@ -12,6 +12,7 @@ Send any link to this bot, and it will save it to [Internet Archive](https://arc
 ```
 start - start Wayback Machine bot
 about - about this bot
+ping - ping server
 ```
 
 # Features
