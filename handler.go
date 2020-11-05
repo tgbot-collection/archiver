@@ -11,6 +11,8 @@ import (
 	"net/url"
 )
 
+import "github.com/tgbot-collection/tgbot_ping"
+
 func startHandler(m *tb.Message) {
 
 	_ = b.Notify(m.Chat, tb.Typing)
@@ -28,7 +30,8 @@ func aboutHandler(m *tb.Message) {
 
 func pingHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, getRuntime(), &tb.SendOptions{ParseMode: tb.ModeHTML})
+	info := tgbot_ping.GetRuntime("botsrunner_archiver_1", "WaybackMachine Bot", "html")
+	_, _ = b.Send(m.Chat, info, &tb.SendOptions{ParseMode: tb.ModeHTML})
 }
 
 func urlHandler(m *tb.Message) {
