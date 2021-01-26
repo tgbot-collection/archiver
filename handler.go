@@ -38,7 +38,7 @@ func urlHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
 	_, err := url.ParseRequestURI(m.Text)
 	if err != nil {
-		log.Warnln("Invalid url.")
+		log.Errorln("Invalid url.")
 		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url <pre>%s</pre> seems to be invalid", m.Text),
 			&tb.SendOptions{ParseMode: tb.ModeHTML})
 		return

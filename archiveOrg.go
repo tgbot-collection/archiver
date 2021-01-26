@@ -41,12 +41,12 @@ func (a archiveOrg) submit(userUrl string) (html string, err error) {
 	html = string(tmp)
 	_ = resp.Body.Close()
 
-	log.Infoln("Requesting to archive.org has completed successfully ....")
+	log.Debugln("Requesting to archive.org has completed successfully.")
 	return html, err
 }
 
 func (a archiveOrg) analysis(html string) (unique string, err error) {
-	log.Infoln("Doing some analysis job....extracting unique UUID...")
+	log.Debugln("Doing some analysis job....extracting unique UUID...")
 
 	uuid, err := __extractionUUID(html)
 	if err != nil {
@@ -59,8 +59,6 @@ func (a archiveOrg) analysis(html string) (unique string, err error) {
 }
 
 func (a archiveOrg) status(uuid string) (message string, err error) {
-	log.Infoln("Getting new status...")
-
 	reqUrl := fmt.Sprintf("%s%s?_t=%d", statusUrl, uuid, time.Now().Unix())
 	resp, err := http.Get(reqUrl)
 	if err != nil {
