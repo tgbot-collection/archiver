@@ -59,6 +59,7 @@ func runner(m, replied *tb.Message, provider archiveProvider) {
 		requestCount += 1
 		log.Infof("🗜️ Archiving %s", url)
 		arc(m, replied, provider, url)
+		time.Sleep(sleep / 2)
 	}
 	log.Infof(" %d jobs complted for %v", len(urls), m.Chat)
 	_, _ = b.Edit(replied, Finish)
