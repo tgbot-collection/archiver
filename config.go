@@ -14,6 +14,8 @@ var token = os.Getenv("TOKEN")
 var attempt = 20
 var sleep = time.Second * 5
 
+var requestCount = 0
+
 // post, param: url
 var saveUrl = "https://web.archive.org/save/"
 

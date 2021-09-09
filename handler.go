@@ -6,7 +6,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,10 @@ func aboutHandler(m *tb.Message) {
 func pingHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
 	info := tgbot_ping.GetRuntime("botsrunner_archiver_1", "WaybackMachine Bot", "html")
+	ownerId, _ := strconv.ParseInt(os.Getenv("owner"), 10, 64)
+	if m.Chat.ID == ownerId {
+		info = fmt.Sprintf("%s\n Total URL archived %d", info, requestCount)
+	}
 	_, _ = b.Send(m.Chat, info, &tb.SendOptions{ParseMode: tb.ModeHTML})
 }
 
@@ -50,6 +56,7 @@ func runner(m, replied *tb.Message, provider archiveProvider) {
 	}
 
 	for _, url := range urls {
+		requestCount += 1
 		log.Infof("🗜️ Archiving %s", url)
 		arc(m, replied, provider, url)
 	}
