@@ -6,7 +6,7 @@ package main
 
 import (
 	"fmt"
-	"net/url"
+	"regexp"
 	"time"
 )
 
@@ -18,14 +18,12 @@ import (
 
 func startHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, "Hi! I'm the [Internet Archive Wayback Machine bot](https://archive.org/web/).\n"+
-		"You can send me any url and I'll archive it for you.", &tb.SendOptions{ParseMode: tb.ModeMarkdown})
+	_, _ = b.Send(m.Chat, startText, &tb.SendOptions{ParseMode: tb.ModeMarkdown})
 }
 
 func aboutHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, "Wayback Machine bot by @BennyThink"+
-		"GitHub: https://github.com/tgbot-collection/archiver")
+	_, _ = b.Send(m.Chat, aboutText)
 }
 
 func pingHandler(m *tb.Message) {
@@ -36,16 +34,7 @@ func pingHandler(m *tb.Message) {
 
 func urlHandler(m *tb.Message) {
 	_ = b.Notify(m.Chat, tb.Typing)
-	_, err := url.ParseRequestURI(m.Text)
-	if err != nil {
-		log.Errorln("Invalid url.")
-		_, _ = b.Send(m.Chat, fmt.Sprintf("Your url <pre>%s</pre> seems to be invalid", m.Text),
-			&tb.SendOptions{ParseMode: tb.ModeHTML})
-		return
-	}
-
-	replied, _ := b.Reply(m, "I've received your request. Please wait a second.")
-	// start to archive. Add more provider here ⬇️
+	replied, _ := b.Reply(m, Receive)
 	providers := []archiveProvider{&archiveOrg{}}
 	for _, prov := range providers {
 		go runner(m, replied, prov)
@@ -53,44 +42,56 @@ func urlHandler(m *tb.Message) {
 }
 
 func runner(m, replied *tb.Message, provider archiveProvider) {
-	_, _ = b.Edit(replied, "Your archive request has been submitted.")
+	re := regexp.MustCompile(`https?://.*`)
+	urls := re.FindAllString(m.Text, -1)
+	if len(urls) == 0 {
+		_, _ = b.Edit(replied, InvalidRequest)
+		return
+	}
 
+	for _, url := range urls {
+		log.Infof("🗜️ Archiving %s", url)
+		arc(m, replied, provider, url)
+	}
+	_, _ = b.Edit(replied, Finish)
+
+}
+
+func arc(m, replied *tb.Message, provider archiveProvider, url string) {
 	_ = b.Notify(m.Chat, tb.UploadingDocument)
-	html, err := provider.submit(m.Text)
+	html, err := provider.submit(url)
 	if err != nil {
-		_, _ = b.Edit(replied, fmt.Sprintf("Request to %s failed:`%v`", provider, err),
-			&tb.SendOptions{ParseMode: tb.ModeMarkdown})
+		_, _ = b.Edit(replied, fmt.Sprintf(ArchiveRequestFailed, provider, err))
 		return
 	}
 
 	unique, err := provider.analysis(html)
 	if err != nil {
-		_, _ = b.Edit(replied, "Archive request has been submitted successfully. "+
-			"But I'm unable to tell you current status. Generally this is okay to ignore.\nError: "+err.Error())
+		_, _ = b.Edit(replied, ArchiveNoResult+"\nError: "+err.Error())
 		return
 	}
 
-	_, _ = b.Edit(replied, "I'm trying to get the archive result for you...Please be patient.")
+	_, _ = b.Edit(replied, Processing)
+
 	var result string
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= attempt; i++ {
 		_ = b.Notify(m.Chat, tb.RecordingAudio)
-		time.Sleep(time.Second * 7)
+		time.Sleep(sleep)
 		result, err = provider.status(unique)
 		// three-way handle
 		if err != nil {
 			log.Warnf("Refresh archive failed %v", err)
 		} else if result != "" {
 			_ = b.Notify(m.Chat, tb.Typing)
-			// TODO if we're implementing more archive provider, we should consider reserve previous provider's result.
-			_, _ = b.Edit(replied, result, &tb.SendOptions{ParseMode: tb.ModeMarkdown, DisableWebPagePreview: true})
+			_, _ = b.Send(m.Chat, result, &tb.SendOptions{ParseMode: tb.ModeMarkdown, DisableWebPagePreview: true})
 			break
 		} else if result == "" {
-			msg := fmt.Sprintf("Refresh attempt %d/%d for %s", i, 20, m.Text)
+			msg := fmt.Sprintf(Updating, i, attempt, m.Text)
 			_, _ = b.Edit(replied, msg, &tb.SendOptions{DisableWebPagePreview: true})
 		}
 	}
 
 	if result == "" {
-		_, _ = b.Edit(replied, "Status operation timeout after 200s.")
+		_, _ = b.Edit(replied, ArchiveStatusTimeout)
 	}
 }

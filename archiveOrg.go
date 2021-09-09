@@ -69,9 +69,14 @@ func (a archiveOrg) status(uuid string) (message string, err error) {
 	_ = json.NewDecoder(resp.Body).Decode(&current)
 
 	if current.Status == "success" {
-		message = fmt.Sprintf(`%s, duration: %.2fs
-Click [here](%s) to visit your snapshot.`, current.Status, current.Duration,
-			"https://web.archive.org/web/"+current.Timestamp+"/"+current.OriginalUrl)
+		message = fmt.Sprintf(
+			`✅ %s - %s, %.2fs. Click [here](%s) to visit your snapshot.`,
+			current.OriginalUrl,
+			current.Status,
+			current.Duration,
+			"https://web.archive.org/web/"+current.Timestamp+"/"+current.OriginalUrl,
+		)
+		log.Infof("✅ %s", current.OriginalUrl)
 	} else {
 		log.Infof("The result as of %s is still %s", time.Now(), current.Status)
 	}
