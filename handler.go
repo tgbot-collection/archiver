@@ -53,6 +53,7 @@ func runner(m, replied *tb.Message, provider archiveProvider) {
 		log.Infof("🗜️ Archiving %s", url)
 		arc(m, replied, provider, url)
 	}
+	log.Infof(" %d jobs complted for %v", len(urls), m.Chat)
 	_, _ = b.Edit(replied, Finish)
 
 }
@@ -80,7 +81,7 @@ func arc(m, replied *tb.Message, provider archiveProvider, url string) {
 		result, err = provider.status(unique)
 		// three-way handle
 		if err != nil {
-			log.Warnf("Refresh archive failed %v", err)
+			log.Errorf("⚠️ %s refresh archive failed %v", url, err)
 		} else if result != "" {
 			_ = b.Notify(m.Chat, tb.Typing)
 			_, _ = b.Send(m.Chat, result, &tb.SendOptions{ParseMode: tb.ModeMarkdown, DisableWebPagePreview: true})
@@ -92,6 +93,7 @@ func arc(m, replied *tb.Message, provider archiveProvider, url string) {
 	}
 
 	if result == "" {
+		log.Errorf(ArchiveStatusTimeout+" %s", url)
 		_, _ = b.Edit(replied, ArchiveStatusTimeout)
 	}
 }

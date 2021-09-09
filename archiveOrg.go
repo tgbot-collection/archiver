@@ -25,7 +25,7 @@ import (
 type archiveOrg struct{}
 
 func (a archiveOrg) submit(userUrl string) (html string, err error) {
-	log.Infoln("Requesting to archive.org...")
+	log.Infof("Requesting to archive.org %s", userUrl)
 
 	var body = url.Values{}
 	body.Set("url", userUrl)
@@ -54,7 +54,7 @@ func (a archiveOrg) analysis(html string) (unique string, err error) {
 		return "", err
 	}
 
-	log.Infoln("Extraction success.")
+	log.Debugln("Extraction success.")
 	return uuid, nil
 }
 
@@ -78,7 +78,7 @@ func (a archiveOrg) status(uuid string) (message string, err error) {
 		)
 		log.Infof("✅ %s", current.OriginalUrl)
 	} else {
-		log.Infof("The result as of %s is still %s", time.Now(), current.Status)
+		log.Infof("⌛️ %s - %s is  %s", current.OriginalUrl, time.Now(), current.Status)
 	}
 
 	_ = resp.Body.Close()
