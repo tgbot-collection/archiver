@@ -53,15 +53,12 @@ func takeScreenshot(url string, c tb.Context) {
 		log.Errorln(err)
 	}
 
-	//var width, _ = wd.ExecuteScript("return document.body.parentNode.scrollWidth", nil)
+	var width, _ = wd.ExecuteScript("return document.body.parentNode.scrollWidth", nil)
 	var height, _ = wd.ExecuteScript("return document.body.parentNode.scrollHeight", nil)
-	var realHeight int
-	if height == nil {
-		realHeight = 1080
-	} else {
-		realHeight = int(height.(float64))
-	}
-	log.Infof("web page height: %d", realHeight)
+	var realHeight = int(height.(float64))
+	var realWidth = int(width.(float64))
+
+	log.Infof("web page width: %d, height: %d", realWidth, realHeight)
 	err = wd.ResizeWindow("", 1920, realHeight)
 	if err != nil {
 		log.Errorln(err)
