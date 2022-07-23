@@ -7,7 +7,8 @@ COPY . /build
 RUN cd /build && make static
 
 
-FROM scratch
+FROM alpine
+RUN apk update && apk add --no-cache chromium-chromedriver
 
 ENV TZ=Asia/Shanghai
 COPY --from=builder /build/archiver /archiver

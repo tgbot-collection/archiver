@@ -15,36 +15,42 @@ import (
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tgbot-collection/tgbot_ping"
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/telebot.v3"
 )
 
-func startHandler(m *tb.Message) {
-	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, startText, &tb.SendOptions{ParseMode: tb.ModeMarkdown})
+func startHandler(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	_, _ = b.Send(c.Chat(), startText, &tb.SendOptions{ParseMode: tb.ModeMarkdown})
+	return nil
 }
 
-func aboutHandler(m *tb.Message) {
-	_ = b.Notify(m.Chat, tb.Typing)
-	_, _ = b.Send(m.Chat, aboutText)
+func aboutHandler(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	_, _ = b.Send(c.Chat(), aboutText)
+	return nil
+
 }
 
-func pingHandler(m *tb.Message) {
-	_ = b.Notify(m.Chat, tb.Typing)
+func pingHandler(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	_ = b.Notify(c.Chat(), tb.Typing)
 	info := tgbot_ping.GetRuntime("botsrunner_archiver_1", "WaybackMachine Bot", "html")
 	ownerId, _ := strconv.ParseInt(os.Getenv("owner"), 10, 64)
-	if m.Chat.ID == ownerId {
+	if c.Chat().ID == ownerId {
 		info = fmt.Sprintf("%s\n Total URL archived %d", info, requestCount)
 	}
-	_, _ = b.Send(m.Chat, info, &tb.SendOptions{ParseMode: tb.ModeHTML})
+	_, _ = b.Send(c.Chat(), info, &tb.SendOptions{ParseMode: tb.ModeHTML})
+	return nil
 }
 
-func urlHandler(m *tb.Message) {
-	_ = b.Notify(m.Chat, tb.Typing)
-	replied, _ := b.Reply(m, Receive)
+func urlHandler(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	replied, _ := b.Reply(c.Message(), Receive)
 	providers := []archiveProvider{&archiveOrg{}}
 	for _, prov := range providers {
-		go runner(m, replied, prov)
+		go runner(c.Message(), replied, prov)
 	}
+	return nil
 }
 
 func runner(m, replied *tb.Message, provider archiveProvider) {
