@@ -50,6 +50,8 @@ func urlHandler(c tb.Context) error {
 	for _, prov := range providers {
 		go runner(c.Message(), replied, prov)
 	}
+
+	go takeScreenshot(c.Message().Text, c)
 	return nil
 }
 

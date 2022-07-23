@@ -16,16 +16,15 @@ import (
 	"os"
 )
 
-var driver = os.Getenv("DRIVER")
-
 var (
-	chromeDriverPath = driver
+	chromeDriverPath = os.Getenv("DRIVER")
 	port             = 9515
 )
 
 func takeScreenshot(url string, c tb.Context) {
+	log.Infof("Taking screenshot for %s", url)
 	// Start a WebDriver server instance
-	opts := []selenium.ServiceOption{}
+	var opts []selenium.ServiceOption
 	selenium.SetDebug(false)
 
 	service, err := selenium.NewChromeDriverService(chromeDriverPath, port, opts...)
@@ -34,14 +33,13 @@ func takeScreenshot(url string, c tb.Context) {
 	}
 	defer service.Stop()
 
-	// Connect to the WebDriver instance running locally.
-	// headless
 	caps := selenium.Capabilities{"browserName": "chrome"}
 	chromeCaps := chrome.Capabilities{
 		Path: "",
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
+			"--disable-dev-shm-usage",
 		},
 	}
 	caps.AddChrome(chromeCaps)
@@ -57,15 +55,19 @@ func takeScreenshot(url string, c tb.Context) {
 
 	//var width, _ = wd.ExecuteScript("return document.body.parentNode.scrollWidth", nil)
 	var height, _ = wd.ExecuteScript("return document.body.parentNode.scrollHeight", nil)
-	log.Infof("web page height: %.2f", height.(float64))
-	err = wd.ResizeWindow("", 1920, int(height.(float64)))
+	var realHeight int
+	if height == nil {
+		realHeight = 1080
+	} else {
+		realHeight = int(height.(float64))
+	}
+	log.Infof("web page height: %d", realHeight)
+	err = wd.ResizeWindow("", 1920, realHeight)
 	if err != nil {
 		log.Errorln(err)
 	}
-
 	screenshot, _ := wd.Screenshot()
-	// save screenshot to file
-	//id := uuid.New()
+	log.Infof("screenshot size: %d", len(screenshot))
 	var filename = GetMD5Hash(url) + ".jpg"
 	log.Infof("Saving screenshot to %s", filename)
 	_ = ioutil.WriteFile(filename, screenshot, 0644)

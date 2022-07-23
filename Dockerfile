@@ -17,6 +17,6 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 WORKDIR /
 
-ENTRYPOINT ["/archiver"]
+CMD ["/archiver"]
 
 # docker run -d --restart=always -e TOKEN="FXI" bennythink/archiver

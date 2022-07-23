@@ -1,14 +1,23 @@
 # archiver
+
 🗜 Internet Archive: Wayback Machine bot
 
 [Wayback Machine](https://t.me/wayback_machine_bot)
 
 # WayBack Machine bot
+
 Send any link to this bot, and it will save it to [Internet Archive](https://archive.org/).
 
+A screenshot of this page will be sent to you as well.
+
 # screenshots
+
 ![](assets/1.png)
+
+![](assets/2.png)
+
 # commands
+
 ```
 start - start Wayback Machine bot
 about - about this bot
@@ -16,9 +25,11 @@ ping - ping server
 ```
 
 # Features
+
 * create snapshot
 
 # Privacy notice
+
 This bot **WILL NEVER** collect your user id, username, last name, first name, url or anything that could be used to
 track you.
 
@@ -35,21 +46,27 @@ I value your privacy, and I know it's difficult to fight against surveillance, i
 > Should ever be forgot.
 
 # TODO
+
 - [x] show snapshot result
 
 # Build
+
 ## General approach
+
 ```bash
 git clone https://github.com/tgbot-collection/archiver
 cd archiver
 go build .
 TOKEN=13245 ./archiver
 ```
+
 ## docker
+
 ```bash
 docker run -e TOKEN=1234 bennythink/archiver
 ```
 
 # License
+
 Apache License
-                           Version 2.0
+Version 2.0
