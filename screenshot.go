@@ -59,7 +59,7 @@ func takeScreenshot(url string, c tb.Context) {
 	var realWidth = int(width.(float64))
 
 	log.Infof("web page width: %d, height: %d", realWidth, realHeight)
-	err = wd.ResizeWindow("", 1920, realHeight)
+	err = wd.ResizeWindow("", 1440, realHeight)
 	if err != nil {
 		log.Errorln(err)
 	}
