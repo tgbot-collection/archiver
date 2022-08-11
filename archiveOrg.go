@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -37,7 +37,7 @@ func (a archiveOrg) submit(userUrl string) (html string, err error) {
 		return "", err
 	}
 
-	tmp, _ := ioutil.ReadAll(resp.Body)
+	tmp, _ := io.ReadAll(resp.Body)
 	html = string(tmp)
 	_ = resp.Body.Close()
 

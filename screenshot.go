@@ -8,14 +8,26 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 	log "github.com/sirupsen/logrus"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
 	tb "gopkg.in/telebot.v3"
-	"io/ioutil"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	_ "image/png"
 	"math"
 	"os"
 	"time"
+)
+
+const (
+	label        = "Powered by https://t.me/wayback_machine_bot"
+	browserWidth = 1440
+	sleepTime    = 10 * time.Second
 )
 
 var (
@@ -73,17 +85,19 @@ func takeScreenshot(url string, c tb.Context) {
 		time.Sleep(300 * time.Millisecond)
 	}
 
-	_ = wd.ResizeWindow("", 1440, realHeight)
+	_ = wd.ResizeWindow("", browserWidth, realHeight)
 	_, _ = wd.ExecuteScript("window.scrollTo(0, 0)", nil)
 
 	// wait for resource to load
-	time.Sleep(10 * time.Second)
+	time.Sleep(sleepTime)
 
 	screenshot, _ := wd.Screenshot()
 	log.Infof("screenshot size: %d", len(screenshot))
-	var filename = GetMD5Hash(url) + ".jpg"
+	var filename = GetMD5Hash(url) + ".png"
 	log.Infof("Saving screenshot to %s", filename)
-	_ = ioutil.WriteFile(filename, screenshot, 0644)
+	_ = os.WriteFile(filename, screenshot, 0644)
+	addWatermark(filename)
+
 	_ = b.Notify(c.Chat(), tb.UploadingPhoto)
 	p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
 	_, _ = b.Send(c.Chat(), p)
@@ -97,6 +111,47 @@ func GetMD5Hash(text string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+func addWatermark(src string) {
+	imgb, _ := os.Open(src)
+	sourceImg, _ := png.Decode(imgb)
+	waterMark := image.NewNRGBA(sourceImg.Bounds())
+
+	fontList := []string{
+		"/usr/share/fonts/TTF/SourceHanSans-VF.ttc",
+		"/System/Library/Fonts/STHeiti Light.ttc",
+		"/usr/share/fonts/TTF/OpenSans-Bold.ttf",
+		"assets/Arial.ttf",
+	}
+	var font *truetype.Font
+	for _, fontFile := range fontList {
+		fontBytes, err := os.ReadFile(fontFile)
+		if err == nil {
+			log.Infof("Found font file %s", fontFile)
+			font, _ = freetype.ParseFont(fontBytes)
+			break
+		}
+	}
+
+	f := freetype.NewContext()
+	f.SetDPI(72)
+	f.SetFont(font)
+	f.SetFontSize(float64(browserWidth / 30))
+	f.SetClip(sourceImg.Bounds())
+	f.SetDst(waterMark)
+	f.SetSrc(image.NewUniform(color.RGBA{R: 0, G: 0, B: 0, A: 255}))
+
+	draw.Draw(waterMark, sourceImg.Bounds(), sourceImg, image.Pt(0, -70), draw.Src)
+	pt := freetype.Pt(sourceImg.Bounds().Max.X/5, 50)
+	_, _ = f.DrawString(label, pt)
+
+	imgw, _ := os.Create(src)
+	_ = png.Encode(imgw, waterMark)
+	_ = imgb.Close()
+	_ = imgw.Close()
+
+}
+
 //func main() {
-//	takeScreenshot("https://twitter.com/googlemaps/status/1555237126568124416", nil)
+//	takeScreenshot("https://www.baidu.com", nil)
+//	takeScreenshot("https://mp.weixin.qq.com/s/v1oB0O_7TCVBR62NmhiyrA", nil)
 //}
