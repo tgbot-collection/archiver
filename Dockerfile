@@ -16,9 +16,10 @@ ENV TZ=Asia/Shanghai
 COPY --from=builder /build/archiver /archiver
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY entrypoint.sh /entrypoint.sh
 
 WORKDIR /
 
-CMD ["/archiver"]
+CMD ["/bin/sh","/entrypoint.sh"]
 
-# docker run -d --restart=always -e TOKEN="FXI" bennythink/archiver
+# docker run -d --restart=always -e TOKEN="FXI" -e DRIVER=/usr/bin/chromedriver bennythink/archiver
