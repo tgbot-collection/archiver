@@ -138,7 +138,15 @@ func addWatermark(src string) {
 	f.SetFontSize(float64(browserWidth / 30))
 	f.SetClip(sourceImg.Bounds())
 	f.SetDst(waterMark)
-	f.SetSrc(image.NewUniform(color.RGBA{R: 0, G: 0, B: 0, A: 255}))
+	f.SetSrc(image.Black)
+
+	width := waterMark.Bounds().Max.X
+	height := 70
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			waterMark.Set(x, y, color.White)
+		}
+	}
 
 	draw.Draw(waterMark, sourceImg.Bounds(), sourceImg, image.Pt(0, -70), draw.Src)
 	pt := freetype.Pt(sourceImg.Bounds().Max.X/5, 50)
@@ -153,5 +161,5 @@ func addWatermark(src string) {
 
 //func main() {
 //	takeScreenshot("https://www.baidu.com", nil)
-//	takeScreenshot("https://mp.weixin.qq.com/s/v1oB0O_7TCVBR62NmhiyrA", nil)
+//	addWatermark("1.png")
 //}
