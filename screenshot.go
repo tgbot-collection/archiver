@@ -74,6 +74,8 @@ func takeScreenshot(url string, c tb.Context) {
 	}
 
 	_ = wd.ResizeWindow("", 1440, realHeight)
+	_, _ = wd.ExecuteScript("window.scrollTo(0, 0)", nil)
+
 	// wait for resource to load
 	time.Sleep(10 * time.Second)
 
@@ -94,3 +96,7 @@ func GetMD5Hash(text string) string {
 	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
 }
+
+//func main() {
+//	takeScreenshot("https://twitter.com/googlemaps/status/1555237126568124416", nil)
+//}
