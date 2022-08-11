@@ -13,7 +13,9 @@ import (
 	"github.com/tebeka/selenium/chrome"
 	tb "gopkg.in/telebot.v3"
 	"io/ioutil"
+	"math"
 	"os"
+	"time"
 )
 
 var (
@@ -33,13 +35,14 @@ func takeScreenshot(url string, c tb.Context) {
 	}
 	defer service.Stop()
 
-	caps := selenium.Capabilities{"browserName": "chrome"}
+	caps := selenium.Capabilities{"browserName": "Chrome"}
 	chromeCaps := chrome.Capabilities{
 		Path: "",
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
 			"--disable-dev-shm-usage",
+			"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
 		},
 	}
 	caps.AddChrome(chromeCaps)
@@ -52,6 +55,8 @@ func takeScreenshot(url string, c tb.Context) {
 	if err := wd.Get(url); err != nil {
 		log.Errorln(err)
 	}
+	_, _ = wd.ExecuteScript("window.scrollTo(0, document.body.scrollHeight)", nil)
+	time.Sleep(5 * time.Second)
 
 	var width, _ = wd.ExecuteScript("return document.body.parentNode.scrollWidth", nil)
 	var height, _ = wd.ExecuteScript("return document.body.parentNode.scrollHeight", nil)
@@ -59,10 +64,19 @@ func takeScreenshot(url string, c tb.Context) {
 	var realWidth = int(width.(float64))
 
 	log.Infof("web page width: %d, height: %d", realWidth, realHeight)
-	err = wd.ResizeWindow("", 1440, realHeight)
-	if err != nil {
-		log.Errorln(err)
+
+	// lazy loading
+	const step = 1000
+	var rounds = int(math.Ceil(float64(realHeight) / float64(step)))
+	for i := 1; i <= rounds; i++ {
+		_, _ = wd.ExecuteScript(fmt.Sprintf("window.scrollTo(0, %d)", i*step), nil)
+		time.Sleep(300 * time.Millisecond)
 	}
+
+	_ = wd.ResizeWindow("", 1440, realHeight)
+	// wait for resource to load
+	time.Sleep(10 * time.Second)
+
 	screenshot, _ := wd.Screenshot()
 	log.Infof("screenshot size: %d", len(screenshot))
 	var filename = GetMD5Hash(url) + ".jpg"
