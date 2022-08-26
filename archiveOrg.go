@@ -70,8 +70,7 @@ func (a archiveOrg) status(uuid string) (message string, err error) {
 
 	if current.Status == "success" {
 		message = fmt.Sprintf(
-			`✅ %s - %s, %.2fs. Click [here](%s) to visit your snapshot.`,
-			current.OriginalUrl,
+			`✅ %s, %.2fs. Click [here](%s) to visit your snapshot.`,
 			current.Status,
 			current.Duration,
 			"https://web.archive.org/web/"+current.Timestamp+"/"+current.OriginalUrl,
