@@ -13,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/chrome"
-	tb "gopkg.in/telebot.v3"
 	"image"
 	"image/color"
 	"image/draw"
@@ -35,7 +34,8 @@ var (
 	port             = 9515
 )
 
-func takeScreenshot(url string, c tb.Context) {
+// DO NOT involve any telegram bot objects here, such as  `b`, `*tb.Message`
+func takeScreenshot(url string) string {
 	log.Infof("Taking screenshot for %s", url)
 	// Start a WebDriver server instance
 	var opts []selenium.ServiceOption
@@ -98,13 +98,9 @@ func takeScreenshot(url string, c tb.Context) {
 	log.Infof("Saving screenshot to %s", filename)
 	_ = os.WriteFile(filename, screenshot, 0644)
 	addWatermark(filename)
-
-	_ = b.Notify(c.Chat(), tb.UploadingPhoto)
-	p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
-	_, _ = b.Send(c.Chat(), p)
 	log.Infof("Screenshot taken for %s", url)
-	// delete file
-	_ = os.Remove(filename)
+	return filename
+
 }
 
 func GetMD5Hash(text string) string {
@@ -161,6 +157,6 @@ func addWatermark(src string) {
 }
 
 //func main() {
-//	takeScreenshot("https://www.baidu.com", nil)
+//	takeScreenshot("https://www.baidu.com")
 //	addWatermark("1.png")
 //}

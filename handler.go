@@ -48,14 +48,22 @@ func urlHandler(c tb.Context) error {
 	replied, _ := b.Reply(c.Message(), Receive)
 	providers := []archiveProvider{&archiveOrg{}}
 	for _, prov := range providers {
-		go runner(c.Message(), replied, prov)
+		go archiveRunner(c.Message(), replied, prov)
 	}
 
-	go takeScreenshot(c.Message().Text, c)
+	go screenshotRunner(c)
 	return nil
 }
 
-func runner(m, replied *tb.Message, provider archiveProvider) {
+func screenshotRunner(c tb.Context) {
+	filename := takeScreenshot(c.Message().Text)
+	_ = b.Notify(c.Chat(), tb.UploadingPhoto)
+	p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
+	_, _ = b.Send(c.Chat(), p)
+	_ = os.Remove(filename)
+}
+
+func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
 	re := regexp.MustCompile(`https?://.*`)
 	urls := re.FindAllString(m.Text, -1)
 	if len(urls) == 0 {
