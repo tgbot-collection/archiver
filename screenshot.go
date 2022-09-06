@@ -67,6 +67,7 @@ func takeScreenshot(url string, c tb.Context) {
 	if err := wd.Get(url); err != nil {
 		log.Errorln(err)
 	}
+	beautify(url)
 	_, _ = wd.ExecuteScript("window.scrollTo(0, document.body.scrollHeight)", nil)
 	time.Sleep(5 * time.Second)
 
