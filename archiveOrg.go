@@ -48,14 +48,17 @@ func (a archiveOrg) submit(userUrl string) (html string, err error) {
 func (a archiveOrg) analysis(html string) (unique string, err error) {
 	log.Debugln("Doing some analysis job....extracting unique UUID...")
 
-	uuid, err := __extractionUUID(html)
-	if err != nil {
+	re := regexp.MustCompile(`spn\.watchJob\("(.+?)"`)
+	result := re.FindStringSubmatch(html)
+
+	if len(result) != 2 {
+		err = errors.New(fmt.Sprintf("regex result is not equal to 2, %v", result))
 		log.Errorf("Extract UUID failed! %v", err)
 		return "", err
 	}
 
 	log.Debugln("Extraction success.")
-	return uuid, nil
+	return result[1], nil
 }
 
 func (a archiveOrg) status(uuid string) (message string, err error) {
@@ -82,16 +85,4 @@ func (a archiveOrg) status(uuid string) (message string, err error) {
 
 	_ = resp.Body.Close()
 	return
-}
-
-func __extractionUUID(html string) (uuid string, err error) {
-	re := regexp.MustCompile(`spn\.watchJob\("(.+?)"`)
-	result := re.FindStringSubmatch(html)
-
-	if len(result) != 2 {
-		return "", errors.New(fmt.Sprintf("regex result is not equal to 2, %v", result))
-	} else {
-		return result[1], nil
-	}
-
 }

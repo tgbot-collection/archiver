@@ -27,11 +27,11 @@ const (
 	label        = "Powered by https://t.me/wayback_machine_bot"
 	browserWidth = 1440
 	sleepTime    = 10 * time.Second
+	port         = 9515
 )
 
 var (
 	chromeDriverPath = os.Getenv("DRIVER")
-	port             = 9515
 )
 
 // DO NOT involve any telegram bot objects here, such as  `b`, `*tb.Message`
