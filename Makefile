@@ -1,7 +1,8 @@
 OS = darwin linux windows
 ARCH = amd64
+export DRIVER=$(shell which chromedriver)
+
 default:
-	git pull
 	@echo "Build current platform executable..."
 	go build  .
 
@@ -17,8 +18,6 @@ all:
     			CGO_ENABLED=0 GOOS=$$o GOARCH=$$a go build -ldflags="-s -w" -o builds/DailyGakki-$$o-$$a .;    \
     		done                              \
     	done
-
-
 
 
 clean:
