@@ -24,3 +24,6 @@ all:
 clean:
 	@rm -rf builds
 	@rm -f archiver
+
+test:
+	go test -v -coverprofile=coverage.txt -covermode=atomic

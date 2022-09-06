@@ -1,5 +1,9 @@
 # archiver
 
+[![codecov](https://codecov.io/gh/tgbot-collection/archiver/branch/master/graph/badge.svg?token=ELEIXK6QAR)](https://codecov.io/gh/tgbot-collection/archiver)
+[![docker image builder](https://github.com/tgbot-collection/archiver/actions/workflows/builder.yaml/badge.svg)](https://github.com/tgbot-collection/archiver/actions/workflows/builder.yaml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/bennythink/archiver)](https://hub.docker.com/r/bennythink/archiver)
+
 🗜 Internet Archive: Wayback Machine bot
 
 [Wayback Machine](https://t.me/wayback_machine_bot)
