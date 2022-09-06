@@ -8,7 +8,7 @@ const (
 )
 
 func beautify(url string) string {
-	if regexp.MustCompile(`.*zhihu.com.*`).MatchString(url) {
+	if regexp.MustCompile(`.*zhihu\.com.*`).MatchString(url) {
 		return zhihu
 	}
 	return dummyCode
