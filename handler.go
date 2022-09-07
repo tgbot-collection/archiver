@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -56,17 +57,22 @@ func urlHandler(c tb.Context) error {
 }
 
 func screenshotRunner(c tb.Context) {
-	filename := takeScreenshot(c.Message().Text)
-	_ = b.Notify(c.Chat(), tb.UploadingPhoto)
-	p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
-	_, _ = b.Send(c.Chat(), p)
-	_ = os.Remove(filename)
+	urls, err := extractURL(c.Message())
+	if err != nil {
+		return
+	}
+	for _, url := range urls {
+		filename := takeScreenshot(url)
+		_ = b.Notify(c.Chat(), tb.UploadingPhoto)
+		p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
+		_, _ = b.Send(c.Chat(), p)
+		_ = os.Remove(filename)
+	}
 }
 
 func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
-	re := regexp.MustCompile(`https?://.*`)
-	urls := re.FindAllString(m.Text, -1)
-	if len(urls) == 0 {
+	urls, err := extractURL(m)
+	if err != nil {
 		_, _ = b.Edit(replied, InvalidRequest)
 		return
 	}
@@ -77,7 +83,6 @@ func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
 		arc(m, replied, provider, url)
 		time.Sleep(sleep / 2)
 	}
-	log.Infof(" %d jobs complted for %v", len(urls), m.Chat)
 	_, _ = b.Edit(replied, Finish)
 
 }
@@ -120,4 +125,13 @@ func arc(m, replied *tb.Message, provider archiveProvider, url string) {
 		log.Errorf(ArchiveStatusTimeout+" %s", url)
 		_, _ = b.Edit(replied, ArchiveStatusTimeout)
 	}
+}
+
+func extractURL(m *tb.Message) ([]string, error) {
+	re := regexp.MustCompile(`https?://.*`)
+	urls := re.FindAllString(m.Text, -1)
+	if len(urls) == 0 {
+		return []string{}, errors.New("No URL found")
+	}
+	return urls, nil
 }

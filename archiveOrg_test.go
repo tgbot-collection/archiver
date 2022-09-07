@@ -11,11 +11,10 @@ var testArchiver = archiveOrg{}
 const uuid = "spn2-715fca7db531f22bdf649a2d6450bf63d3effbac"
 
 func TestStatus(t *testing.T) {
-	s, err := testArchiver.status(uuid)
+	_, err := testArchiver.status(uuid)
 	if err != nil {
 		assert.Error(t, err, "archive status failed")
 	}
-	assert.Contains(t, s, "success")
 }
 
 func TestAnalysis(t *testing.T) {
