@@ -53,21 +53,27 @@ I value your privacy, and I know it's difficult to fight against surveillance, i
 
 - [x] show snapshot result
 
-# Build
+# Usage
 
-## General approach
+## Build project locally
 
 ```bash
 git clone https://github.com/tgbot-collection/archiver
 cd archiver
 go build .
-TOKEN=13245 ./archiver
+TOKEN=13245 DRIVER=$(which chromedriver) ./archiver
 ```
 
 ## docker
 
 ```bash
-docker run -e TOKEN=1234 bennythink/archiver
+docker run -e DRIVER=$(which chromedriver) TOKEN=1234 bennythink/archiver
+```
+
+## prebuilt binary
+Download it from release, and then
+```shell
+TOKEN=1234 DRIVER=$(which chromedriver) ./archiver
 ```
 
 # License
