@@ -52,5 +52,5 @@ universal:
 	file builds/archiver-darwin-universal
 
 release:
-	git tag $(git rev-parse --short HEAD)
+	git tag $(shell git rev-parse --short HEAD)
 	git push --tags
