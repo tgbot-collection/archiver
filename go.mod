@@ -8,5 +8,5 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tebeka/selenium v0.9.9
 	github.com/tgbot-collection/tgbot_ping v1.0.2
-	gopkg.in/telebot.v3 v3.1.0
+	gopkg.in/telebot.v3 v3.1.3
 )
