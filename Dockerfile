@@ -9,7 +9,7 @@ RUN cd /build && make static
 
 FROM alpine
 RUN apk update && apk add --no-cache chromium-chromedriver
-RUN wget -O /usr/share/fonts/TTF/SourceHanSans-VF.ttc \
+RUN mkdir -p /usr/share/fonts/TTF && wget -O /usr/share/fonts/TTF/SourceHanSans-VF.ttc \
     https://github.com/adobe-fonts/source-han-sans/raw/release/Variable/OTC/SourceHanSans-VF.ttf.ttc
 
 ENV TZ=Asia/Shanghai
