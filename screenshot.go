@@ -19,7 +19,9 @@ import (
 	"image/png"
 	_ "image/png"
 	"math"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -36,6 +38,17 @@ var (
 
 // DO NOT involve any telegram bot objects here, such as  `b`, `*tb.Message`
 func takeScreenshot(url string) string {
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Errorln(err)
+		return ""
+	}
+	contenType := resp.Header.Get("Content-Type")
+	if !strings.Contains(contenType, "text/html") {
+		log.Warningln("Not a html page")
+		return ""
+	}
+
 	log.Infof("Taking screenshot for %s", url)
 	// Start a WebDriver server instance
 	var opts []selenium.ServiceOption
