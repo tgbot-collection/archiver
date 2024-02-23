@@ -5,6 +5,7 @@
 package main
 
 import (
+	tb "gopkg.in/telebot.v3"
 	"os"
 	"time"
 )
@@ -41,4 +42,19 @@ const (
 	aboutText            = "Wayback Machine bot by @BennyThink \nGitHub: https://github.com/tgbot-collection/archiver"
 	startText            = "Hi! I'm the [Internet Archive Wayback Machine bot](https://archive.org/web/).\n" +
 		"You can send me any url and I'll archive it for you."
+)
+
+const (
+	modeNormal = "normal"
+	modeAI     = "ai"
+	userRole   = "user"
+	modelRole  = "model"
+)
+
+var apiKey = os.Getenv("GEMINI_API_KEY")
+var geminiURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey
+
+var (
+	selector = &tb.ReplyMarkup{}
+	btnPrev  = selector.Data("Ask AI", "ai-init", "1")
 )

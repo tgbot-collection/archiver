@@ -12,7 +12,7 @@ RUN apk update && apk add --no-cache chromium-chromedriver
 RUN mkdir -p /usr/share/fonts/TTF && wget -O /usr/share/fonts/TTF/SourceHanSans-VF.ttc \
     https://github.com/adobe-fonts/source-han-sans/raw/release/Variable/OTC/SourceHanSans-VF.ttf.ttc
 
-ENV TZ=Asia/Shanghai
+
 COPY --from=builder /build/archiver /archiver
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo

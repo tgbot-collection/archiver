@@ -34,7 +34,6 @@ func aboutHandler(c tb.Context) error {
 
 func pingHandler(c tb.Context) error {
 	_ = b.Notify(c.Chat(), tb.Typing)
-	_ = b.Notify(c.Chat(), tb.Typing)
 	info := tgbot_ping.GetRuntime("botsrunner_archiver_1", "WaybackMachine Bot", "html")
 	ownerId, _ := strconv.ParseInt(os.Getenv("owner"), 10, 64)
 	if c.Chat().ID == ownerId {
@@ -42,6 +41,65 @@ func pingHandler(c tb.Context) error {
 	}
 	_, _ = b.Send(c.Chat(), info, &tb.SendOptions{ParseMode: tb.ModeHTML})
 	return nil
+}
+
+func mainEntrance(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	_ = b.Notify(c.Chat(), tb.Typing)
+	user := getUser(c.Sender().ID)
+	mode := user.Mode
+	selector.Inline(selector.Row(btnPrev))
+
+	if mode == "ai" {
+		if getChatsCount(c.Sender().ID) == 0 {
+			// prepend a message
+			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
+		} else {
+			addChat(c.Sender().ID, userRole, c.Message().Text)
+		}
+		aiResponse := askAI(c.Sender().ID)
+		addChat(c.Sender().ID, modelRole, aiResponse)
+		return c.Send(aiResponse, tb.NoPreview)
+	} else {
+		return urlHandler(c)
+	}
+
+}
+
+func stopAIHandler(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	disableAI(c.Sender().ID)
+	rows := deleteChat(c.Sender().ID)
+	return c.Send(fmt.Sprintf("AI mode disabled. %d chats deleted.", rows))
+}
+
+func testEntrance(c tb.Context) error {
+	_ = b.Notify(c.Chat(), tb.Typing)
+	user := getUser(c.Sender().ID)
+	mode := user.Mode
+	selector.Inline(selector.Row(btnPrev))
+	if mode == "ai" {
+		if getChatsCount(c.Sender().ID) == 0 {
+			// prepend a message
+			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
+		} else {
+			addChat(c.Sender().ID, userRole, c.Message().Text)
+		}
+		aiResponse := askAI(c.Sender().ID)
+		addChat(c.Sender().ID, modelRole, aiResponse)
+		return c.Send(aiResponse, tb.NoPreview)
+	} else {
+		return c.Reply("Your link has been saved! "+mode, selector)
+	}
+
+}
+
+func buttonCallback(c tb.Context) error {
+	var q = &tb.CallbackResponse{Text: "AI mode enabled."}
+	enableAI(c.Sender().ID, c.Message().ReplyTo.Text)
+	_ = c.Send("AI mode enabled. Please send your query for this URL. **Your chats will be saved in database until you use /stop to exit AI mode**",
+		&tb.SendOptions{ParseMode: tb.ModeMarkdown})
+	return c.Respond(q)
 }
 
 func urlHandler(c tb.Context) error {
@@ -57,7 +115,7 @@ func urlHandler(c tb.Context) error {
 }
 
 func screenshotRunner(c tb.Context) {
-	urls, err := extractURL(c.Message())
+	urls, err := extractURL(c.Message().Text)
 	if err != nil {
 		return
 	}
@@ -65,13 +123,13 @@ func screenshotRunner(c tb.Context) {
 		filename := takeScreenshot(url)
 		_ = b.Notify(c.Chat(), tb.UploadingPhoto)
 		p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
-		_, _ = b.Send(c.Chat(), p)
+		_, _ = b.Reply(c.Message(), p)
 		_ = os.Remove(filename)
 	}
 }
 
 func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
-	urls, err := extractURL(m)
+	urls, err := extractURL(m.Text)
 	if err != nil {
 		_, _ = b.Edit(replied, InvalidRequest)
 		return
@@ -123,13 +181,13 @@ func arc(m, replied *tb.Message, provider archiveProvider, url string) {
 
 	if result == "" {
 		log.Errorf(ArchiveStatusTimeout+" %s", url)
-		_, _ = b.Edit(replied, ArchiveStatusTimeout)
+		_, _ = b.Edit(replied, ArchiveStatusTimeout+" Please try here: https://web.archive.org/web/*/"+url)
 	}
 }
 
-func extractURL(m *tb.Message) ([]string, error) {
+func extractURL(text string) ([]string, error) {
 	re := regexp.MustCompile(`https?://.*`)
-	urls := re.FindAllString(m.Text, -1)
+	urls := re.FindAllString(text, -1)
 	if len(urls) == 0 {
 		return []string{}, errors.New("No URL found")
 	}

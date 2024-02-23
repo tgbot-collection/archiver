@@ -25,6 +25,8 @@ func main() {
 	if err != nil {
 		log.Panicf("Please check your network or TOKEN! %v", err)
 	}
+	_ = db.AutoMigrate(&User{}, &Chat{})
+
 	log.SetOutput(os.Stdout)
 	log.SetReportCaller(true)
 	Formatter := &log.TextFormatter{
@@ -53,7 +55,11 @@ Across the Great Wall, we can reach every corner in the world.
 	b.Handle("/start", startHandler)
 	b.Handle("/about", aboutHandler)
 	b.Handle("/ping", pingHandler)
-	b.Handle(tb.OnText, urlHandler)
+	b.Handle("/stop", stopAIHandler)
+	b.Handle(tb.OnText, mainEntrance)
+	//b.Handle(tb.OnText, testEntrance)
+
+	b.Handle(&btnPrev, buttonCallback)
 
 	log.Infoln("I'm running...")
 	b.Start()
