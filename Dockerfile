@@ -1,4 +1,4 @@
-FROM golang:1.19.0-alpine as builder
+FROM golang:1.22-alpine as builder
 
 RUN apk update && apk add --no-cache make ca-certificates tzdata && mkdir /build
 COPY go.mod /build
