@@ -1,4 +1,4 @@
-~~# archiver
+# archiver
 
 [![codecov](https://codecov.io/gh/tgbot-collection/archiver/branch/master/graph/badge.svg?token=ELEIXK6QAR)](https://codecov.io/gh/tgbot-collection/archiver)
 [![docker image builder](https://github.com/tgbot-collection/archiver/actions/workflows/builder.yaml/badge.svg)](https://github.com/tgbot-collection/archiver/actions/workflows/builder.yaml)
@@ -38,6 +38,7 @@ The AI functionality is powered by [Gemini](https://ai.google.dev/).
 start - start Wayback Machine bot
 about - about this bot
 ping - ping server
+stop - stop AI mode
 ```
 
 # Features

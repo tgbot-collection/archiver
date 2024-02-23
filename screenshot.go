@@ -62,7 +62,7 @@ func takeScreenshot(url string) string {
 
 	caps := selenium.Capabilities{"browserName": "Chrome"}
 	chromeCaps := chrome.Capabilities{
-		Path: "",
+		Path: os.Getenv("CHROME_BINARY"),
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
