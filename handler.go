@@ -48,7 +48,6 @@ func mainEntrance(c tb.Context) error {
 	_ = b.Notify(c.Chat(), tb.Typing)
 	user := getUser(c.Sender().ID)
 	mode := user.Mode
-	selector.Inline(selector.Row(btnPrev))
 
 	if mode == "ai" {
 		if getChatsCount(c.Sender().ID) == 0 {
@@ -141,7 +140,8 @@ func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
 		arc(m, replied, provider, url)
 		time.Sleep(sleep / 2)
 	}
-	_, _ = b.Edit(replied, Finish)
+	selector.Inline(selector.Row(btnPrev))
+	_, _ = b.Edit(replied, Finish, selector)
 
 }
 
