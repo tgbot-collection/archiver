@@ -53,7 +53,7 @@ const (
 
 var apiKey = os.Getenv("GEMINI_API_KEY")
 var geminiURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey
-
+var OpenAIKey = os.Getenv("OPENAI_API_KEY")
 var (
 	selector = &tb.ReplyMarkup{}
 	btnPrev  = selector.Data("Ask AI", "ai-init", "1")

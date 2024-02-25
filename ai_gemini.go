@@ -37,7 +37,7 @@ type Data struct {
 	Contents []Content `json:"contents"`
 }
 
-func askAI(userID int64) string {
+func askGemini(userID int64) string {
 	var data Data
 	chats := getChats(userID)
 	if len(chats) > 0 {

@@ -56,7 +56,7 @@ func mainEntrance(c tb.Context) error {
 		} else {
 			addChat(c.Sender().ID, userRole, c.Message().Text)
 		}
-		aiResponse := askAI(c.Sender().ID)
+		aiResponse := askGemini(c.Sender().ID)
 		addChat(c.Sender().ID, modelRole, aiResponse)
 		return c.Send(aiResponse, tb.NoPreview)
 	} else {
@@ -84,7 +84,7 @@ func testEntrance(c tb.Context) error {
 		} else {
 			addChat(c.Sender().ID, userRole, c.Message().Text)
 		}
-		aiResponse := askAI(c.Sender().ID)
+		aiResponse := askGemini(c.Sender().ID)
 		addChat(c.Sender().ID, modelRole, aiResponse)
 		return c.Send(aiResponse, tb.NoPreview)
 	} else {
