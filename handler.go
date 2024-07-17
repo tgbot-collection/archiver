@@ -52,11 +52,11 @@ func mainEntrance(c tb.Context) error {
 	if mode == "ai" {
 		if getChatsCount(c.Sender().ID) == 0 {
 			// prepend a message
-			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
+			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this %s\n%s", user.Link, c.Message().Text))
 		} else {
 			addChat(c.Sender().ID, userRole, c.Message().Text)
 		}
-		aiResponse := askGemini(c.Sender().ID)
+		aiResponse := askOpenAI(c.Sender().ID)
 		addChat(c.Sender().ID, modelRole, aiResponse)
 		return c.Send(aiResponse, tb.NoPreview)
 	} else {
@@ -72,31 +72,10 @@ func stopAIHandler(c tb.Context) error {
 	return c.Send(fmt.Sprintf("AI mode disabled. %d chats deleted.", rows))
 }
 
-func testEntrance(c tb.Context) error {
-	_ = b.Notify(c.Chat(), tb.Typing)
-	user := getUser(c.Sender().ID)
-	mode := user.Mode
-	selector.Inline(selector.Row(btnPrev))
-	if mode == "ai" {
-		if getChatsCount(c.Sender().ID) == 0 {
-			// prepend a message
-			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
-		} else {
-			addChat(c.Sender().ID, userRole, c.Message().Text)
-		}
-		aiResponse := askGemini(c.Sender().ID)
-		addChat(c.Sender().ID, modelRole, aiResponse)
-		return c.Send(aiResponse, tb.NoPreview)
-	} else {
-		return c.Reply("Your link has been saved! "+mode, selector)
-	}
-
-}
-
 func buttonCallback(c tb.Context) error {
 	var q = &tb.CallbackResponse{Text: "AI mode enabled."}
 	enableAI(c.Sender().ID, c.Message().ReplyTo.Text)
-	_ = c.Send("AI mode enabled. Please send your query for this URL. **Your chats will be saved in database until you use /stop to exit AI mode**",
+	_ = c.Send("AI mode enabled. Please send your question. **Your chats will be saved in database until you use /stop to exit AI mode**",
 		&tb.SendOptions{ParseMode: tb.ModeMarkdown})
 	return c.Respond(q)
 }
