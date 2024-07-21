@@ -1,92 +1,104 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
+	"context"
+	"encoding/base64"
+	"fmt"
+	"github.com/sashabaranov/go-openai"
+	"os"
 )
 
-type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+func initAI() *openai.Client {
+	var config = openai.DefaultConfig(OpenAIKey)
+	config.BaseURL = "https://burn.hair/v1"
+	var client = openai.NewClientWithConfig(config)
+	return client
 }
 
-type ChatRequest struct {
-	Model    string        `json:"model"`
-	Messages []ChatMessage `json:"messages"`
+func encodeImageToBase64(filePath string) string {
+	// Open the image file
+	file, _ := os.Open(filePath)
+
+	defer file.Close()
+
+	// Read the file contents into a byte slice
+	fileInfo, _ := file.Stat()
+
+	fileSize := fileInfo.Size()
+	buffer := make([]byte, fileSize)
+
+	_, _ = file.Read(buffer)
+
+	// Encode the byte slice to a Base64 string
+	base64String := base64.StdEncoding.EncodeToString(buffer)
+	return "data:image/jpeg;base64," + base64String
 }
 
-type ChatResponse struct {
-	Choices []struct {
-		Message struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-}
+func imageToText(data string) string {
+	client := initAI()
+	const prompt = `This is a screenshot of a webpage, I want you to transcribe this page's main content into text. 
+Skip preamble and only return the result`
 
-func mapRole(originalRole string) string {
-	switch originalRole {
-	case "USER":
-		return "user"
-	case "MODEL":
-		return "assistant"
-	default:
-		return "user"
+	imagePart := openai.ChatMessagePart{
+		Type: openai.ChatMessagePartTypeImageURL,
+		ImageURL: &openai.ChatMessageImageURL{
+			URL: data,
+		},
 	}
-}
 
-const openAI = "https://gptmos.com/v1/chat/completions"
+	textPart := openai.ChatMessagePart{
+		Type: openai.ChatMessagePartTypeText,
+		Text: prompt,
+	}
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT4o,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:         openai.ChatMessageRoleUser,
+					MultiContent: []openai.ChatMessagePart{imagePart, textPart},
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return "ocr error"
+	}
+
+	var content = resp.Choices[0].Message.Content
+	const p = `This conversation is based on this text:\n\n`
+	return p + content
+}
 
 func askOpenAI(userID int64) string {
-	var chatReq ChatRequest
+	client := initAI()
 	chats := getChats(userID)
-	if len(chats) > 0 {
-		for _, chat := range chats {
-			chatReq.Messages = append(chatReq.Messages, ChatMessage{
-				Role:    mapRole(chat.Role),
-				Content: chat.Text,
-			})
+
+	var messages = []openai.ChatCompletionMessage{}
+	for _, chat := range chats {
+		m := openai.ChatCompletionMessage{
+			Role:    chat.Role,
+			Content: chat.Text,
 		}
+		messages = append(messages, m)
 	}
 
-	chatReq.Model = "gpt-4-0125-preview"
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model:    openai.GPT4o,
+			Messages: messages,
+		},
+	)
 
-	jsonData, err := json.Marshal(chatReq)
 	if err != nil {
-		log.Errorf("Failed to marshal request: %v", err)
-		return err.Error()
-	}
-	log.Infoln(string(jsonData))
-
-	// Replace with the actual URL and add authorization headers as needed
-	req, _ := http.NewRequest("POST", openAI, bytes.NewBuffer(jsonData))
-	req.Header.Set("Authorization", "Bearer "+OpenAIKey)
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Errorf("Failed to make request: %v", err)
-		return err.Error()
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		text := string(body)
-		log.Errorf("Request failed, %s", text)
-		return text
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return "chatgpt error"
 	}
 
-	var chatResp ChatResponse
-	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		log.Errorf("Failed to decode response: %v", err)
-		return err.Error()
-	}
-
-	if len(chatResp.Choices) > 0 && len(chatResp.Choices[0].Message.Content) > 0 {
-		return chatResp.Choices[0].Message.Content
-	}
-
-	return "no response found"
+	var content = resp.Choices[0].Message.Content
+	return content
 }

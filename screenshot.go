@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/jpeg"
 	"image/png"
 	_ "image/png"
 	"math"
@@ -34,6 +36,7 @@ const (
 
 var (
 	chromeDriverPath = os.Getenv("DRIVER")
+	jpgOptions       = &jpeg.Options{Quality: 80}
 )
 
 // DO NOT involve any telegram bot objects here, such as  `b`, `*tb.Message`
@@ -67,7 +70,7 @@ func takeScreenshot(url string) string {
 			"--headless",
 			"--no-sandbox",
 			"--disable-dev-shm-usage",
-			"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
+			"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
 		},
 	}
 	caps.AddChrome(chromeCaps)
@@ -106,10 +109,17 @@ func takeScreenshot(url string) string {
 	time.Sleep(sleepTime)
 
 	screenshot, _ := wd.Screenshot()
+	// save image as jpeg to save space
+	var filename = GetMD5Hash(url) + ".jpg"
+
+	pngReader := bytes.NewReader(screenshot)
+	img, _ := png.Decode(pngReader)
+	outputFile, _ := os.Create(filename)
+	defer outputFile.Close()
+	_ = jpeg.Encode(outputFile, img, jpgOptions)
+
 	log.Infof("screenshot size: %d", len(screenshot))
-	var filename = GetMD5Hash(url) + ".png"
-	log.Infof("Saving screenshot to %s", filename)
-	_ = os.WriteFile(filename, screenshot, 0644)
+
 	addWatermark(filename)
 	log.Infof("Screenshot taken for %s", url)
 	return filename
@@ -123,7 +133,7 @@ func GetMD5Hash(text string) string {
 
 func addWatermark(src string) {
 	imgb, _ := os.Open(src)
-	sourceImg, _ := png.Decode(imgb)
+	sourceImg, _ := jpeg.Decode(imgb)
 	waterMark := image.NewNRGBA(sourceImg.Bounds())
 
 	fontList := []string{
@@ -163,7 +173,7 @@ func addWatermark(src string) {
 	_, _ = f.DrawString(label, pt)
 
 	imgw, _ := os.Create(src)
-	_ = png.Encode(imgw, waterMark)
+	_ = jpeg.Encode(imgw, waterMark, jpgOptions)
 	_ = imgb.Close()
 	_ = imgw.Close()
 

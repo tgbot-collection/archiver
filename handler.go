@@ -50,14 +50,9 @@ func mainEntrance(c tb.Context) error {
 	mode := user.Mode
 
 	if mode == "ai" {
-		if getChatsCount(c.Sender().ID) == 0 {
-			// prepend a message
-			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
-		} else {
-			addChat(c.Sender().ID, userRole, c.Message().Text)
-		}
-		aiResponse := askGemini(c.Sender().ID)
-		addChat(c.Sender().ID, modelRole, aiResponse)
+		addChat(c.Sender().ID, userRole, c.Message().Text)
+		aiResponse := askOpenAI(c.Sender().ID)
+		addChat(c.Sender().ID, assistantRole, aiResponse)
 		return c.Send(aiResponse, tb.NoPreview)
 	} else {
 		return urlHandler(c)
@@ -72,33 +67,28 @@ func stopAIHandler(c tb.Context) error {
 	return c.Send(fmt.Sprintf("AI mode disabled. %d chats deleted.", rows))
 }
 
-func testEntrance(c tb.Context) error {
-	_ = b.Notify(c.Chat(), tb.Typing)
-	user := getUser(c.Sender().ID)
-	mode := user.Mode
-	selector.Inline(selector.Row(btnPrev))
-	if mode == "ai" {
-		if getChatsCount(c.Sender().ID) == 0 {
-			// prepend a message
-			addChat(c.Sender().ID, userRole, fmt.Sprintf("please take a look at this link %s\n%s", user.Link, c.Message().Text))
-		} else {
-			addChat(c.Sender().ID, userRole, c.Message().Text)
-		}
-		aiResponse := askGemini(c.Sender().ID)
-		addChat(c.Sender().ID, modelRole, aiResponse)
-		return c.Send(aiResponse, tb.NoPreview)
-	} else {
-		return c.Reply("Your link has been saved! "+mode, selector)
-	}
-
-}
-
 func buttonCallback(c tb.Context) error {
-	var q = &tb.CallbackResponse{Text: "AI mode enabled."}
-	enableAI(c.Sender().ID, c.Message().ReplyTo.Text)
-	_ = c.Send("AI mode enabled. Please send your query for this URL. **Your chats will be saved in database until you use /stop to exit AI mode**",
+	_ = c.Edit(&tb.ReplyMarkup{})
+	var q = &tb.CallbackResponse{Text: "Preparing AI mode...."}
+	_ = c.Respond(q)
+	doc := c.Message().Document.File
+	var file = &tb.File{
+		FileID:     doc.FileID,
+		UniqueID:   doc.UniqueID,
+		FileSize:   doc.FileSize,
+		FilePath:   doc.FilePath,
+		FileLocal:  doc.FileLocal,
+		FileURL:    doc.FileURL,
+		FileReader: doc.FileReader,
+	}
+	_ = b.Download(file, c.Message().Document.FileName)
+	defer os.Remove(c.Message().Document.FileName)
+	data := encodeImageToBase64(c.Message().Document.FileName)
+	enableAI(c.Sender().ID, c.Message().ReplyTo.Text, data)
+
+	_ = c.Send("AI mode enabled. Please send your question. **Your chats will be saved in database until you use /stop to exit AI mode**",
 		&tb.SendOptions{ParseMode: tb.ModeMarkdown})
-	return c.Respond(q)
+	return nil
 }
 
 func urlHandler(c tb.Context) error {
@@ -122,7 +112,8 @@ func screenshotRunner(c tb.Context) {
 		filename := takeScreenshot(url)
 		_ = b.Notify(c.Chat(), tb.UploadingPhoto)
 		p := &tb.Document{File: tb.FromDisk(filename), FileName: filename}
-		_, _ = b.Reply(c.Message(), p)
+		selector.Inline(selector.Row(btnPrev))
+		_, _ = b.Reply(c.Message(), p, selector)
 		_ = os.Remove(filename)
 	}
 }
@@ -140,8 +131,7 @@ func archiveRunner(m, replied *tb.Message, provider archiveProvider) {
 		arc(m, replied, provider, url)
 		time.Sleep(sleep / 2)
 	}
-	selector.Inline(selector.Row(btnPrev))
-	_, _ = b.Edit(replied, Finish, selector)
+	_, _ = b.Edit(replied, Finish)
 
 }
 
