@@ -2,33 +2,95 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/sashabaranov/go-openai"
+	"os"
 )
 
-func askOpenAI(userID int64) string {
-	var config = openai.DefaultConfig("token")
-	config.BaseURL = "https://burn.hair"
+func initAI() *openai.Client {
+	var config = openai.DefaultConfig(OpenAIKey)
+	config.BaseURL = "https://burn.hair/v1"
 	var client = openai.NewClientWithConfig(config)
+	return client
+}
 
-	chats := getChats(userID)
-	if len(chats) < 0 {
-		return "nothing yet"
-	}
-	for _, chat := range chats {
-		fmt.Println(chat)
+func encodeImageToBase64(filePath string) string {
+	// Open the image file
+	file, _ := os.Open(filePath)
+
+	defer file.Close()
+
+	// Read the file contents into a byte slice
+	fileInfo, _ := file.Stat()
+
+	fileSize := fileInfo.Size()
+	buffer := make([]byte, fileSize)
+
+	_, _ = file.Read(buffer)
+
+	// Encode the byte slice to a Base64 string
+	base64String := base64.StdEncoding.EncodeToString(buffer)
+	return "data:image/jpeg;base64," + base64String
+}
+
+func imageToText(data string) string {
+	client := initAI()
+	const prompt = `This is a screenshot of a webpage, I want you to transcribe this page's main content into text. 
+Skip preamble and only return the result`
+
+	imagePart := openai.ChatMessagePart{
+		Type: openai.ChatMessagePartTypeImageURL,
+		ImageURL: &openai.ChatMessageImageURL{
+			URL: data,
+		},
 	}
 
+	textPart := openai.ChatMessagePart{
+		Type: openai.ChatMessagePartTypeText,
+		Text: prompt,
+	}
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model: openai.GPT4o,
 			Messages: []openai.ChatCompletionMessage{
 				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: "Hello!",
+					Role:         openai.ChatMessageRoleUser,
+					MultiContent: []openai.ChatMessagePart{imagePart, textPart},
 				},
 			},
+		},
+	)
+
+	if err != nil {
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return "ocr error"
+	}
+
+	var content = resp.Choices[0].Message.Content
+	const p = `This conversation is based on this text:\n\n`
+	return p + content
+}
+
+func askOpenAI(userID int64) string {
+	client := initAI()
+	chats := getChats(userID)
+
+	var messages = []openai.ChatCompletionMessage{}
+	for _, chat := range chats {
+		m := openai.ChatCompletionMessage{
+			Role:    chat.Role,
+			Content: chat.Text,
+		}
+		messages = append(messages, m)
+	}
+
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model:    openai.GPT4o,
+			Messages: messages,
 		},
 	)
 
@@ -38,6 +100,5 @@ func askOpenAI(userID int64) string {
 	}
 
 	var content = resp.Choices[0].Message.Content
-	fmt.Println(content)
 	return content
 }

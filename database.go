@@ -32,7 +32,7 @@ func getUser(userID int64) *User {
 	return &user
 }
 
-func enableAI(userID int64, link string) *User {
+func enableAI(userID int64, link string, data string) *User {
 	user := getUser(userID)
 	user.Mode = modeAI
 	user.Link = link
@@ -44,7 +44,9 @@ func enableAI(userID int64, link string) *User {
 		// update db
 		db.Save(&user)
 	}
-
+	// OCR the text
+	text := imageToText(data)
+	addChat(userID, systemRole, text)
 	return user
 }
 
