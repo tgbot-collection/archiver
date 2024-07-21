@@ -16,7 +16,7 @@ A screenshot of this page will be sent to you as well.
 
 Optionally, you can use AI mode to get a more accurate screenshot.
 
-The AI functionality is powered by [Gemini](https://ai.google.dev/).
+The AI functionality is powered by [OpenAI Burn.Hair](https://burn.hair/).
 
 # screenshots
 
