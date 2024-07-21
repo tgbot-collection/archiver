@@ -34,7 +34,7 @@ func encodeImageToBase64(filePath string) string {
 	return "data:image/jpeg;base64," + base64String
 }
 
-func imageToText(data string) string {
+func imageToText(link, data string) string {
 	client := initAI()
 	const prompt = `This is a screenshot of a webpage, I want you to transcribe this page's main content into text. 
 Skip preamble and only return the result`
@@ -69,8 +69,7 @@ Skip preamble and only return the result`
 	}
 
 	var content = resp.Choices[0].Message.Content
-	const p = `This conversation is based on this text:\n\n`
-	return p + content
+	return fmt.Sprintf("Following text is a transcribe of %s:\n\n%s\n", link, content)
 }
 
 func askOpenAI(userID int64) string {

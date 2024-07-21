@@ -45,7 +45,7 @@ func enableAI(userID int64, link string, data string) *User {
 		db.Save(&user)
 	}
 	// OCR the text
-	text := imageToText(data)
+	text := imageToText(link, data)
 	addChat(userID, systemRole, text)
 	return user
 }
