@@ -9,11 +9,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
-	log "github.com/sirupsen/logrus"
-	"github.com/tebeka/selenium"
-	"github.com/tebeka/selenium/chrome"
 	"image"
 	"image/color"
 	"image/draw"
@@ -23,8 +18,15 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	log "github.com/sirupsen/logrus"
+	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 )
 
 const (
@@ -50,6 +52,15 @@ func takeScreenshot(url string) string {
 	if !strings.Contains(contenType, "text/html") {
 		log.Warningln("Not a html page")
 		return ""
+	}
+
+	contentLengthStr := resp.Header.Get("Content-Length")
+	if contentLengthStr != "" {
+		size, err := strconv.ParseInt(contentLengthStr, 10, 64)
+		if err == nil && size > 10*1024*1024 { // > 10 MB
+			log.Warningln("HTML too big, skip:", url)
+			return ""
+		}
 	}
 
 	log.Infof("Taking screenshot for %s", url)
