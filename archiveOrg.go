@@ -6,8 +6,8 @@ package main
 
 // always keep standard library and 3rd separated
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,15 +31,29 @@ func (a archiveOrg) submit(userUrl string) (html string, err error) {
 	body.Set("url", userUrl)
 	body.Set("capture_all", "on")
 
-	resp, err := http.PostForm(saveUrl, body)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Errorf("Request to archive failed! %v", err)
-		return "", err
+	req, err := http.NewRequest(http.MethodPost, saveUrl, bytes.NewBufferString(body.Encode()))
+	if err != nil {
+		return "", fmt.Errorf("create archive request: %w", err)
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// Save Page Now returns a job_id as JSON when this header is present.
+	req.Header.Set("Accept", "application/json")
 
-	tmp, _ := io.ReadAll(resp.Body)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Errorf("Request to archive failed! %v", err)
+		return "", fmt.Errorf("submit archive request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	tmp, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read archive response: %w", err)
+	}
 	html = string(tmp)
-	_ = resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return "", fmt.Errorf("archive.org returned %s: %s", resp.Status, html)
+	}
 
 	log.Debugln("Requesting to archive.org has completed successfully.")
 	return html, err
@@ -48,11 +62,22 @@ func (a archiveOrg) submit(userUrl string) (html string, err error) {
 func (a archiveOrg) analysis(html string) (unique string, err error) {
 	log.Debugln("Doing some analysis job....extracting unique UUID...")
 
+	// The current Save Page Now API returns JSON, for example:
+	// {"url":"https://example.com", "job_id":"..."}.
+	var response struct {
+		JobID string `json:"job_id"`
+	}
+	if json.Unmarshal([]byte(html), &response) == nil && response.JobID != "" {
+		log.Debugln("Extraction success.")
+		return response.JobID, nil
+	}
+
+	// Retain compatibility with the legacy HTML response.
 	re := regexp.MustCompile(`spn\.watchJob\("(.+?)"`)
 	result := re.FindStringSubmatch(html)
 
 	if len(result) != 2 {
-		err = errors.New(fmt.Sprintf("regex result is not equal to 2, %v", result))
+		err = fmt.Errorf("archive response contains no job_id")
 		log.Errorf("Extract UUID failed! %v", err)
 		return "", err
 	}
